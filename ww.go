@@ -12,7 +12,8 @@ import "strings"
 
 
 // Constants
-const PATH = "out.txt"
+// TODO: check if file exists
+const PATH = "timelog.log"
 const STOP = "<>--- STOP ---<>"
 
 // Valid commands and argument counts
@@ -74,12 +75,14 @@ func _getFileAsList(path string) ([]string) {
     return strings.Split(string(data), "\n")
 }
 
+// Adds a new line to the logfile
 func add(event string) (error) {
     output := getCurrentTime() + ": " + event
     err := _writeToFile(PATH, output, os.O_APPEND)
     return err
 }
 
+// shows the content of the logfile
 func log() {
     data := _getFileAsList(PATH)
     PrintT("Log")
@@ -88,11 +91,13 @@ func log() {
     }
 }
 
+// TODO: create logfile if does not exits
 func initFile() {
     //TODO: write path to config file
     add("INIT")
 }
 
+// shows last entry of logfile
 func status() {
     PrintT("Status")
     temp := _getFileAsList(PATH)
@@ -103,10 +108,12 @@ func status() {
     }
 }
 
+// shows time difference between alle log entrys 
 func showTimes() {
     fmt.Println("TODO: Calculate time diffs and print log with diffs")
 }
 
+// removes last entry of logfile
 func remove() {
     data := _getFileAsList(PATH)
     err := os.Truncate(PATH, 0) // clear file
@@ -116,6 +123,7 @@ func remove() {
     check(err)
 }
 
+// adds a new stop-event to the logfile
 func stop() {
     add(STOP)
 }

@@ -155,7 +155,7 @@ func processUserCmd(args []string) {
 }
 
 func main() {
-	args := os.Args[1:]
+    args := os.Args[1:]
     fmt.Println("Args:", strings.Join(args, " "))
     if len(args) != 0 {
         processUserCmd(args)

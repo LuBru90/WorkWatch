@@ -57,15 +57,11 @@ func getCurrentTime() (string) {
     return time.Now().Format("01.02.2006 15:04:05 Mon")
 }
 
-func _writeToFile(path string, content string, operation int, newline bool) (error) {
+func _writeToFile(path string, content string, operation int) (error) {
     file, err := os.OpenFile(path, operation, 0644)
     check(err)
-    if newline {
-        _, err = file.WriteString(content + "\n")
-    } else {
-        _, err = file.WriteString(content)
-    }
 
+    _, err = file.WriteString(content + "\n")
     check(err)
 
     file.Sync()
@@ -80,7 +76,7 @@ func _getFileAsList(path string) ([]string) {
 
 func add(event string) (error) {
     output := getCurrentTime() + ": " + event
-    err := _writeToFile(PATH, output, os.O_APPEND, true)
+    err := _writeToFile(PATH, output, os.O_APPEND)
     return err
 }
 
@@ -116,10 +112,7 @@ func remove() {
     err := os.Truncate(PATH, 0) // clear file
     check(err)
 
-    err = _writeToFile(PATH, strings.Join(data[:len(data) - 2], "\n"), os.O_APPEND, false)
-    check(err)
-
-    err = _writeToFile(PATH, "", os.O_APPEND, true)
+    err = _writeToFile(PATH, strings.Join(data[:len(data) - 2], "\n"), os.O_APPEND)
     check(err)
 }
 

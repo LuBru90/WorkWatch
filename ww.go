@@ -118,7 +118,7 @@ func log() {
     data := _getFileAsList(PATH)
 
     PrintT("Log")
-    for i, line := range data[:len(data)-2] {
+    for i, line := range data[:len(data)-1] {
         if len(line) != 0 {
             t1 = timeFromLog(line)
             if i != 0 {
@@ -127,8 +127,11 @@ func log() {
             }
             t0 = t1
         }
-        fmt.Println(line)
+        if i != len(data) - 2 {
+            fmt.Println(line)
+        }
     }
+
     status()
 }
 

@@ -34,7 +34,8 @@ var CMDS = map[string]int{
                             "stop": 1,
                             "add": 2,
                             "rm": 1,
-                            "init": 1,
+                            "init": 2,
+                            "test": 1,
                         }
 
 
@@ -114,6 +115,7 @@ func printDuration(dur time.Duration) {
 func log() {
     var t1, t0 time.Time
     var dur time.Duration
+    var skipDur bool
 
     data := _getFileAsList(PATH)
 
@@ -121,17 +123,18 @@ func log() {
     for i, line := range data[:len(data)-1] {
         if len(line) != 0 {
             t1 = timeFromLog(line)
-            if i != 0 {
+            if i != 0 && !skipDur {
                 dur = getTimeDiff(t1, t0)
                 printDuration(dur)
+                skipDur = false
             }
+            skipDur = getMessageFromLog(line) == STOP
             t0 = t1
         }
         if i != len(data) - 2 {
             fmt.Println(line)
         }
     }
-
     status()
 }
 
@@ -142,8 +145,12 @@ func initFile() {
     fmt.Println("Use: ww add '<text>'")
 }
 
-func timeFromLog(line string) (t time.Time){
+func timeFromLog(line string) (t time.Time) {
     return convertStringToTime(strings.Join(strings.Split(line, " ")[:3], " "))
+}
+
+func getMessageFromLog(line string) (out string) {
+    return strings.Join(strings.Split(line, " ")[3:], " ")
 }
 
 // shows last entry of logfile
@@ -174,6 +181,13 @@ func remove() {
     check(err)
 }
 
+func test() {
+    //out :=_getFileAsList(PATH)
+    //return getMessageFromLog(out[0])
+    //return temp
+    //fmt.Println("Log-Message:", temp)
+}
+
 // adds a new stop-event to the logfile
 func stop() {
     add(STOP)
@@ -198,6 +212,8 @@ func processUserCmd(args []string) {
                 log()
             case cmd == "log":
                 log()
+            case cmd == "test":
+                test()
             }
         }
     }

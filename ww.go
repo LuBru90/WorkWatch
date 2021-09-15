@@ -34,7 +34,7 @@ var CMDS = map[string]int{
                             "stop": 1,
                             "add": 2,
                             "rm": 1,
-                            "init": 2,
+                            "init": 1,
                             "test": 1,
                         }
 
@@ -108,7 +108,14 @@ func add(event string) (error) {
 func printDuration(dur time.Duration) {
     fmt.Print(OKGREEN + ">>>> ")
     fmt.Println(dur)
-    fmt.Print(ENDC)
+    fmt.Print(ENDC + "\n")
+}
+
+func printLogLine(line string) {
+    fmt.Print(OKBLUE)
+    fmt.Print(timeFromLog(line))
+    fmt.Print(ENDC + "\n")
+    fmt.Println(getMessageFromLog(line))
 }
 
 // shows the content of the logfile and times
@@ -127,12 +134,14 @@ func log() {
                 dur = getTimeDiff(t1, t0)
                 printDuration(dur)
                 skipDur = false
+            } else {
+                fmt.Println()
             }
             skipDur = getMessageFromLog(line) == STOP
             t0 = t1
         }
         if i != len(data) - 2 {
-            fmt.Println(line)
+            printLogLine(line)
         }
     }
     status()
@@ -162,7 +171,8 @@ func status() {
         t1, err := time.Parse(TIMEFORMAT, getCurrentTime())
         check(err)
         if err == nil {
-            fmt.Println(temp[len(temp) - 2])
+            //fmt.Println(temp[len(temp) - 2])
+            printLogLine(temp[len(temp) - 2])
             printDuration(getTimeDiff(t1, t0))
         }
     } else {

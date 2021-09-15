@@ -8,13 +8,13 @@ import "io/ioutil"
 import "strings"
 
 // TODO: config parser
-//import "github.com/bigkevmcd/go-configparser"
+import "github.com/bigkevmcd/go-configparser"
 
 // Constants
 // TODO: check if file exists
-const PATH = "timelog.log"
 const STOP = "<>--- STOP ---<>"
 const TIMEFORMAT = "01.02.2006 15:04:05 Mon"
+var path = ""
 
 // print-colors:
 const HEADER = "\033[95m"
@@ -36,8 +36,8 @@ var CMDS = map[string]int{
                             "rm": 1,
                             "init": 1,
                             "test": 1,
+                            "setenv": 2,
                         }
-
 
 func check(e error) {
     if e != nil {
@@ -81,7 +81,7 @@ func getTimeDiff(t1, t0 time.Time) (tDiff time.Duration) {
     return t1.Sub(t0)
 }
 
-func _writeToFile(path string, content string, operation int) (error) {
+func _writeToFile(content string, operation int) (error) {
     file, err := os.OpenFile(path, operation, 0644)
     check(err)
 
@@ -92,8 +92,8 @@ func _writeToFile(path string, content string, operation int) (error) {
     return err
 }
 
-func _getFileAsList(path string) ([]string) {
-    data, err := ioutil.ReadFile(PATH)
+func _getFileAsList() ([]string) {
+    data, err := ioutil.ReadFile(path)
     check(err)
     return strings.Split(string(data), "\n")
 }
@@ -101,7 +101,7 @@ func _getFileAsList(path string) ([]string) {
 // Adds a new line to the logfile
 func add(event string) (error) {
     output := getCurrentTime() + " " + event
-    err := _writeToFile(PATH, output, os.O_APPEND)
+    err := _writeToFile(output, os.O_APPEND)
     return err
 }
 
@@ -124,7 +124,7 @@ func log() {
     var dur time.Duration
     var skipDur bool
 
-    data := _getFileAsList(PATH)
+    data := _getFileAsList()
 
     PrintT("Log")
     for i, line := range data[:len(data)-1] {
@@ -148,8 +148,7 @@ func log() {
 }
 
 // TODO: create logfile if does not exits
-func initFile() {
-    //TODO: write path to config file
+func initFile(path string) {
     add("INIT")
     fmt.Println("Use: ww add '<text>'")
 }
@@ -165,7 +164,7 @@ func getMessageFromLog(line string) (out string) {
 // shows last entry of logfile
 func status() {
     PrintT("Current Status")
-    temp := _getFileAsList(PATH)
+    temp := _getFileAsList()
     if len(temp) > 1 {
         t0 := timeFromLog(temp[len(temp) - 2])
         t1, err := time.Parse(TIMEFORMAT, getCurrentTime())
@@ -183,11 +182,11 @@ func status() {
 
 // removes last entry of logfile
 func remove() {
-    data := _getFileAsList(PATH)
-    err := os.Truncate(PATH, 0) // clear file
+    data := _getFileAsList()
+    err := os.Truncate(path, 0) // clear file
     check(err)
 
-    err = _writeToFile(PATH, strings.Join(data[:len(data) - 2], "\n"), os.O_APPEND)
+    err = _writeToFile(strings.Join(data[:len(data) - 2], "\n"), os.O_APPEND)
     check(err)
 }
 
@@ -203,16 +202,34 @@ func stop() {
     add(STOP)
 }
 
+func getConfigPath() (path string) {
+    p, err := configparser.NewConfigParserFromFile("config.cfg")
+    if err == nil {
+        temp, err := p.Get("chris", "logpath")
+        check(err)
+        fmt.Println("Path:", temp)
+        return temp
+    }
+    return ""
+}
+
+func switchEnv() {
+
+}
+
 func processUserCmd(args []string) {
     cmd := args[0]
     if argcount, ok := CMDS[cmd]; ok {
         if argcount == len(args) {
             switch {
+            case cmd == "setenv":
+                switchEnv()
+
             case cmd == "add":
                 add(strings.Join(args[1:], " "))
                 status()
             case cmd == "init":
-                initFile()
+                initFile(path)
                 log()
             case cmd == "stop":
                 stop()
@@ -229,9 +246,15 @@ func processUserCmd(args []string) {
     }
 }
 
+
+
 func main() {
     args := os.Args[1:]
-    //fmt.Println("Args:", strings.Join(args, " "))
+
+    // read config:
+    path = getConfigPath()
+    fmt.Println("Using Path:", path)
+    // Process user input:
     if len(args) != 0 {
         processUserCmd(args)
     } else {
